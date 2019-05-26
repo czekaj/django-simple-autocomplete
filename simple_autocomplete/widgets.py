@@ -41,7 +41,7 @@ class AutoCompleteWidget(Select):
         self.model = model
         super(AutoCompleteWidget, self).__init__(*args, **kwargs)
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         if value is None:
             value = ''
 
