@@ -105,8 +105,8 @@ class AutoCompleteWidget(Select):
     })(django.jQuery);
     </script>
 
-<input id="id_%(name)s_helper" type="text" value="%(display)s" />
-<a href="#" title="Clear" onclick="django.jQuery('#id_%(name)s_helper').val(''); django.jQuery('#id_%(name)s_helper').focus(); django.jQuery('#id_%(name)s').val(''); return false;">x<small></small></a>
+<input id="id_%(name)s_helper" type="text" class="textinput textInput form-control" value="%(display)s" />
+django.jQuery('#id_%(name)s_helper').focus(); django.jQuery('#id_%(name)s').val(''); return false;">x<small></small></a>
 <input name="%(name)s" id="id_%(name)s" type="hidden" value="%(value)s" />""" % dict(name=name, url=url, display=display, value=value)
         return mark_safe(html)
 
