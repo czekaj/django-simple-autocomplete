@@ -22,7 +22,7 @@ def get_json(request, token):
             model = apps.get_model(app_label, model_name)
             queryset = QuerySet(model=model, query=query)
             fieldname = get_search_fieldname(model)
-            di = {'%s__istartswith' % fieldname: searchtext}
+            di = {'%s__icontains' % fieldname: searchtext}
             app_label_model = '%s.%s' % (app_label, model_name)
             max_items = get_setting(app_label_model, 'max_items', 10)
             items = queryset.filter(**di).order_by(fieldname)[:max_items]
