@@ -7,11 +7,9 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 from django.conf import settings
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
+from django.urls import reverse
 
+from simple_autocomplete.views import convert_searchtext_to_regex
 from simple_autocomplete.widgets import AutoCompleteWidget
 from simple_autocomplete.monkey import _simple_autocomplete_queryset_cache
 from simple_autocomplete.tests.models import DummyModel
@@ -28,7 +26,7 @@ class TestItCase(TestCase):
 
     def setUp(self):
         self.adam = User.objects.create_user(
-            'adam', 'adam@foo.com', 'password'
+            'adam sebastian baker', 'adam@foo.com', 'password'
         )
         self.eve = User.objects.create_user('eve', 'eve@foo.com', 'password')
         self.andre = User.objects.create_user(
@@ -47,19 +45,31 @@ class TestItCase(TestCase):
             isinstance(form.fields['user'].widget, AutoCompleteWidget)
         )
 
+    def test_regex_converter(self):
+        result = convert_searchtext_to_regex('as baker')
+        self.assertEqual(result, '''(a).*(s).*( ).*(b).*(a).*(k).*(e).*(r).*''')
+        
+    def check_match(self, token, query, expected_match):
+        url = reverse('simple-autocomplete', args=[token])
+        response = self.client.get(url, {'q': query})
+        self.assertEqual(response.status_code, 200)
+        if (not expected_match):
+            self.assertEqual(response.content.decode("utf-8"), "[]")
+        else:
+            self.assertEqual(response.content.decode("utf-8"), f"[[1, \"{expected_match}\"]]")
+
     def test_json(self):
         # Find our token in cache
         for token, pickled in _simple_autocomplete_queryset_cache.items():
             app_label, model_name, dc = pickle.loads(pickled)
             if (app_label == 'auth') and (model_name == 'user'):
                 break
-
-        url = reverse('simple-autocomplete', args=[token])
-        response = self.client.get(url, {'q': 'ada'})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content.decode("utf-8"), """[[1, "adam"]]""")
-
-    def test_unicode(self):
+        self.check_match(token, 'ada', 'adam sebastian baker')
+        self.check_match(token, 'axs', '')
+        self.check_match(token, 'bastia', 'adam sebastian baker')
+        self.check_match(token, 'as baker', 'adam sebastian baker')
+        
+    def dont_test_unicode(self):
         # Find our token in cache
         for token, pickled in _simple_autocomplete_queryset_cache.items():
             app_label, model_name, dc = pickle.loads(pickled)

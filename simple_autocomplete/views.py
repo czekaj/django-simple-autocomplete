@@ -10,6 +10,8 @@ from django.conf import settings
 from simple_autocomplete.monkey import _simple_autocomplete_queryset_cache
 from simple_autocomplete.utils import get_search_fieldname, get_setting
 
+def convert_searchtext_to_regex(searchtext):
+    return "".join(map(lambda x: f'({x}).*', searchtext))
 
 def get_json(request, token):
     """Return matching results as JSON"""
@@ -22,7 +24,8 @@ def get_json(request, token):
             model = apps.get_model(app_label, model_name)
             queryset = QuerySet(model=model, query=query)
             fieldname = get_search_fieldname(model)
-            di = {'%s__icontains' % fieldname: searchtext}
+            regextext = convert_searchtext_to_regex(searchtext)
+            di = {'%s__iregex' % fieldname: regextext}
             app_label_model = '%s.%s' % (app_label, model_name)
             max_items = get_setting(app_label_model, 'max_items', 10)
             items = queryset.filter(**di).order_by(fieldname)[:max_items]
